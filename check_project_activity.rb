@@ -37,20 +37,14 @@ else
 
   hostname = URI.parse(host).hostname
 
-  url = "#{host}/api/v2/projects.xml"
+  url = "#{host}/api/v2/projects.xml?name_and_id_only"
   doc = get(url, username, password, basic_auth)
-  projects = doc.xpath("//project")
+  identifiers = doc.xpath("//identifier").map(&:text)
 
 
   CSV.open("#{hostname}.csv", "wb+") do |csv|
-    csv << ["Project Name", "Last Updated On"]
-    projects.each do |project|
-
-      identifier = project.xpath(".//identifier").text
-      name = project.xpath(".//name").first.text
-      template = project.xpath(".//template").text
-
-      next if template == "true"
+    csv << ["Project Identifier", "Last Updated On"]
+    identifiers.each do |identifier|
 
       url = "#{host}/api/v2/projects/#{identifier}/feeds/events.xml"
       doc = get(url, username, password, basic_auth)
@@ -58,9 +52,9 @@ else
       doc.remove_namespaces!
       last_updated_time = doc.xpath("//entry//updated").map(&:text).first
       last_updated_date = last_updated_time ? Time.parse(last_updated_time).to_date.to_s : nil
-      csv << [name, last_updated_date]
+      csv << [identifier, last_updated_date]
 
-      puts "Project #{name} (#{identifier}) was last updated on #{last_updated_date.inspect}"
+      puts "Project #{identifier} was last updated on #{last_updated_date.inspect}"
     end
   end
 end
