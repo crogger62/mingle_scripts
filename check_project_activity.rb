@@ -5,13 +5,6 @@ require "api_auth"
 require 'nokogiri'
 require 'csv'
 
-class String
-  def blank?
-    empty?
-  end
-end
-
-
 def get(url, access_key_id, secret_access_key)
 
   uri = URI.parse(url)
