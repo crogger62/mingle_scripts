@@ -8,7 +8,7 @@ Runs on
 * ruby - 2.1.1
 * api-auth - 1.1.0
 
-Usage: - ruby check_project_activity.rb https://yoursite.mingle.thoughtworks.com <your username> <your secret HMAC key>
+Usage: - ruby check_project_activity.rb https://yoursite.mingle.thoughtworks.com [your username] [your secret HMAC key]
 
 Split the HMAC key into separate arguments if they have line breaks.
 Check out Mingle help docs on how to generate HMAC key for your self.
