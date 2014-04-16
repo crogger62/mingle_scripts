@@ -1,29 +1,30 @@
 require 'net/http'
 require 'nokogiri'
-require 'open-uri'
 
-uri = URI('http://localhost:3000/api/v2/projects.xml')
-request = Net::HTTP::Get.new(uri) # => String
-request.basic_auth "admin", "p"
-
-response = Net::HTTP.start(uri.hostname, uri.port) {|http|
-  http.request(request)
-}
-
-doc = Nokogiri::XML(response.body)
-identifiers = doc.xpath("//identifier").map(&:text)
-
-identifiers.each do |identifier|
-
-  uri = URI("http://localhost:3000/api/v2/projects/#{identifier}/feeds/events.xml")
-  request = Net::HTTP::Get.new(uri)
-
+def get(url, username, password)
+  uri = URI(url)
+  request = Net::HTTP::Get.new(uri) # => String
+  request.basic_auth username, password
 
   response = Net::HTTP.start(uri.hostname, uri.port) do |http|
     http.request(request)
   end
 
-  doc = Nokogiri::XML(response.body)
+  Nokogiri::XML(response.body)
+end
+
+host = ARGV[0]
+username = ARGV[1]
+password = ARGV[2]
+
+url = "#{host}/api/v2/projects.xml"
+doc = get(url, username, password)
+identifiers = doc.xpath("//identifier").map(&:text)
+
+identifiers.each do |identifier|
+
+  url = "#{host}/api/v2/projects/#{identifier}/feeds/events.xml"
+  doc = get(url, username, password)
 
   doc.remove_namespaces!
   last_updated_time = doc.xpath("//entry//updated").map(&:text).first
