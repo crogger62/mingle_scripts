@@ -5,34 +5,40 @@ require "api_auth"
 require 'nokogiri'
 require 'csv'
 
-def get(url, access_key_id, secret_access_key)
+def get(url, username, password, basic_auth)
 
   uri = URI.parse(url)
   http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = true
+  http.use_ssl = true if (url =~ /^https/)
 
   request = Net::HTTP::Get.new(uri.request_uri)
-  ApiAuth.sign!(request, access_key_id, secret_access_key)
+  if basic_auth
+    request.basic_auth username, password
+  else
+    ApiAuth.sign!(request, username, password)
+  end
 
   response = http.request(request)
 
   Nokogiri::XML(response.body)
 end
 
-if ARGV.length < 3
+if ARGV.length < 4
   p "USAGE: Please pass in the following arguments: "
-  p "1. host                      - e.g. https://some.mingle.thoughtworks.com"
-  p "2. access_key_id             - your username"
-  p "3. secret_access_key         - split the key into separate args by line breaks"
+  p "1. host                         - e.g. https://some.mingle.thoughtworks.com"
+  p "2. auth_mechanism               - e.g. Basic or HMAC"
+  p "3. username                     - your username"
+  p "4. secret_access_key | password - If using basic auth, your password, otherwise split the HMAC secret key into separate args by line breaks"
 else
   host = ARGV[0]
-  access_key_id = ARGV[1]
-  secret_access_key = ARGV[2..-1].join("\n")
+  basic_auth = (ARGV[1] =~ /Basic/i) == 0
+  username = ARGV[2]
+  password = ARGV[3..-1].join("\n")
 
   hostname = URI.parse(host).hostname
 
   url = "#{host}/api/v2/projects.xml?name_and_id_only"
-  doc = get(url, access_key_id, secret_access_key)
+  doc = get(url, username, password, basic_auth)
   identifiers = doc.xpath("//identifier").map(&:text)
 
 
@@ -41,7 +47,7 @@ else
     identifiers.each do |identifier|
 
       url = "#{host}/api/v2/projects/#{identifier}/feeds/events.xml"
-      doc = get(url, access_key_id, secret_access_key)
+      doc = get(url, username, password, basic_auth)
 
       doc.remove_namespaces!
       last_updated_time = doc.xpath("//entry//updated").map(&:text).first
