@@ -5,8 +5,8 @@ check_project_activity
 ----------------------
 
 Runs on 
-ruby - 2.1.1
-api-auth - 1.1.0
+* ruby - 2.1.1
+* api-auth - 1.1.0
 
 Usage: - ruby check_project_activity.rb https://yoursite.mingle.thoughtworks.com <your username> <your secret HMAC key>
 
